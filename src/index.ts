@@ -28,12 +28,26 @@ class GitHubRelease {
     this.isPrerelease = release.prerelease;
   }
 
-  private getFormattedBody(): string {
+  private getMessageContent() {
+    return this.isPrerelease
+      ? `New Next.js canary release ${this.name}!`
+      : `New Next.js release ${this.name}!`;
+  }
+
+  private getEmbedTitle() {
+    return this.isPrerelease ? `🚧 ${this.name}` : `📦 ${this.name}`;
+  }
+
+  private getEmbedBody() {
     return this.body.replace(
       /#(?<number>\d+)/g,
       (_, value) =>
         `[#${value}](<https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}/pulls/${value}>)`,
     );
+  }
+
+  private getEmbedColour() {
+    return this.isPrerelease ? GitHubRelease.PRERELEASE_COLOUR : GitHubRelease.STABLE_COLOUR;
   }
 
   public getTime() {
@@ -42,17 +56,13 @@ class GitHubRelease {
 
   public getMessage(): MessageCreateOptions {
     return {
-      content: this.isPrerelease
-        ? `New Next.js canary release ${this.name}!`
-        : `New Next.js release ${this.name}!`,
+      content: this.getMessageContent(),
       embeds: [
         new EmbedBuilder()
-          .setTitle(this.name)
+          .setTitle(this.getEmbedTitle())
           .setURL(this.url)
-          .setDescription(this.getFormattedBody())
-          .setColor(
-            this.isPrerelease ? GitHubRelease.PRERELEASE_COLOUR : GitHubRelease.STABLE_COLOUR,
-          ),
+          .setDescription(this.getEmbedBody())
+          .setColor(this.getEmbedColour()),
       ],
     };
   }
