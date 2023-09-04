@@ -22,5 +22,6 @@ module.exports = {
     "@typescript-eslint/no-floating-promises": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "no-console": "off",
+    "prefer-named-capture-group": "off",
   },
 };

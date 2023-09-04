@@ -44,22 +44,19 @@ class GitHubRelease {
   }
 
   private getEmbedBody() {
-    return this.body
-      .replace(
-        /#(\d+)/g,
-        `[#$1](<https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}/pulls/$1>)`
-      )
-      .replace(
-        /@([a-zA-Z0-9-]+)/g,
-        `[@$1](<https://github.com/$1>)`
-      )
-      .replace(
-        /[a-f0-9]{40}/g,
-        value =>
-          `[${value.substring(0, 7)}](<https://github.com/${env.REPO_NAME}/${
-            env.REPO_OWNER
-          }/commit/${value}>)`,
-      );
+    const repoLink = `https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}`;
+    return (
+      this.body
+        // PR number: #123
+        .replace(/#(\d+)/g, `[#$1](<${repoLink}/pulls/$1>)`)
+        // Username: @test
+        .replace(/@([a-zA-Z0-9-]+)/g, `[@$1](<https://github.com/$1>)`)
+        // Commit hash
+        .replace(
+          /[a-f0-9]{40}/g,
+          value => `[${value.substring(0, 7)}](<${repoLink}/commit/${value}>)`,
+        )
+    );
   }
 
   private getEmbedColour() {
