@@ -1,11 +1,7 @@
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
-import {
-  Client,
-  EmbedBuilder,
-  Events,
-  GatewayIntentBits,
-  type MessageCreateOptions,
-} from "discord.js";
+import type { RESTPostAPIWebhookWithTokenJSONBody } from "discord-api-types/v10";
+import { EmbedBuilder } from "@discordjs/builders";
+import { fetch } from "undici";
 import { env } from "./env.js";
 
 class GitHubRelease {
@@ -15,8 +11,8 @@ class GitHubRelease {
   private readonly body: string;
   private readonly isPrerelease: boolean;
 
-  private static readonly STABLE_COLOUR = "#0072F7";
-  private static readonly PRERELEASE_COLOUR = "#FFB11A";
+  private static readonly STABLE_COLOUR = 0x0072F7;
+  private static readonly PRERELEASE_COLOUR = 0xFFB11A;
 
   public constructor(
     release: RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"][number],
@@ -69,7 +65,7 @@ class GitHubRelease {
     return this.time;
   }
 
-  public getMessage(): MessageCreateOptions {
+  public getMessage(): RESTPostAPIWebhookWithTokenJSONBody {
     return {
       content: this.getMessageContent(),
       embeds: [
@@ -77,7 +73,8 @@ class GitHubRelease {
           .setTitle(this.getEmbedTitle())
           .setURL(this.url)
           .setDescription(this.getEmbedBody())
-          .setColor(this.getEmbedColour()),
+          .setColor(this.getEmbedColour())
+          .toJSON(),
       ],
     };
   }
@@ -86,7 +83,7 @@ class GitHubRelease {
 class LastUpdatedStore {
   private readonly lastUpdated: Date;
   public constructor() {
-    this.lastUpdated = new Date();
+    this.lastUpdated = new Date(1);
   }
   public releaseIsNewer(release: GitHubRelease): boolean {
     return release.getTime() > this.lastUpdated;
@@ -97,7 +94,6 @@ class LastUpdatedStore {
 }
 
 class ReleaseChecker {
-  private readonly client: Client<true>;
   private readonly octokit = new Octokit({ auth: env.GITHUB_TOKEN });
   private readonly lastUpdatedStore = new LastUpdatedStore();
 
@@ -105,10 +101,6 @@ class ReleaseChecker {
     maxItems: 2,
     revalidate: 1000 * 60, // 1 minute
   };
-
-  public constructor(client: Client<true>) {
-    this.client = client;
-  }
 
   async getNewReleases(): Promise<GitHubRelease[]> {
     const res = await this.octokit.repos.listReleases({
@@ -125,12 +117,11 @@ class ReleaseChecker {
   }
 
   async postNewRelease(release: GitHubRelease) {
-    const releaseChannel = this.client.channels.cache.get(env.RELEASE_CHANNEL_ID);
-    if (!releaseChannel || !releaseChannel.isTextBased()) {
-      console.error("Release channel is invalid");
-      return;
-    }
-    await releaseChannel.send(release.getMessage());
+    await fetch(env.DISCORD_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(release.getMessage()),
+    });
   }
 
   async check() {
@@ -148,9 +139,4 @@ class ReleaseChecker {
   }
 }
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-client.once(Events.ClientReady, c => {
-  console.log(`Ready! Logged in as ${c.user.tag}`);
-  new ReleaseChecker(c).run();
-});
-client.login(env.DISCORD_TOKEN);
+new ReleaseChecker().run();

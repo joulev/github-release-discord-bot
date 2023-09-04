@@ -16,8 +16,7 @@ It doesn't require the repository owner to configure anything. Instead it just p
 
 2. Add the necessary environment variables:
 
-   - `DISCORD_TOKEN`: The bot token
-   - `RELEASE_CHANNEL_ID`: The release channel ID where the bot will post messages
+   - `DISCORD_WEBHOOK`: The webhook url
    - `REPO_OWNER`: The owner of the GitHub repository (e.g. `vercel`)
    - `REPO_NAME`: The name of the GitHub repository (e.g. `next.js`)
    - `GITHUB_TOKEN` (optional): A GitHub personal access token (with the **repo** scope) to access the repository (only necessary if the repository is not public)
