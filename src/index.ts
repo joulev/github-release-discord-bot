@@ -100,6 +100,7 @@ class ReleaseChecker {
   private readonly lastUpdatedStore = new LastUpdatedStore();
 
   options = {
+    maxItems: 2,
     revalidate: 1000 * 60, // 1 minute
   };
 
@@ -114,7 +115,10 @@ class ReleaseChecker {
     });
     return res.data
       .map(release => new GitHubRelease(release))
-      .filter(release => this.lastUpdatedStore.releaseIsNewer(release));
+      .filter(release => this.lastUpdatedStore.releaseIsNewer(release))
+      .sort((a, b) => b.getTime().valueOf() - a.getTime().valueOf()) // recent first
+      .slice(0, this.options.maxItems)
+      .reverse(); // we need to post the oldest first
   }
 
   async postNewRelease(release: GitHubRelease) {
@@ -128,7 +132,7 @@ class ReleaseChecker {
 
   async check() {
     const releases = await this.getNewReleases();
-    for (const release of releases.sort((a, b) => a.getTime().valueOf() - b.getTime().valueOf())) {
+    for (const release of releases) {
       // eslint-disable-next-line no-await-in-loop -- We want to ensure the order is correct
       await this.postNewRelease(release);
     }
