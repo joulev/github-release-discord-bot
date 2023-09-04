@@ -7,6 +7,7 @@ interface GitHubRelease {
   time: Date;
   url: string;
   body: string | null | undefined;
+  isPrerelease: boolean;
 }
 
 class LastUpdatedStore {
@@ -44,6 +45,7 @@ class ReleaseChecker {
           time: release.published_at ? new Date(release.published_at) : null,
           url: release.html_url,
           body: release.body,
+          isPrerelease: release.prerelease,
         })),
       );
     return releases
@@ -57,7 +59,11 @@ class ReleaseChecker {
       console.error("Release channel is invalid");
       return;
     }
-    await releaseChannel.send(`**${release.name}**\n${release.url}\n${release.body}`);
+    await releaseChannel.send(
+      `**${release.name}${release.isPrerelease ? " (prerelease)" : ""}**\n${release.url}\n${
+        release.body
+      }`,
+    );
   }
 
   async check() {
