@@ -83,7 +83,7 @@ class GitHubRelease {
 class LastUpdatedStore {
   private readonly lastUpdated: Date;
   public constructor() {
-    this.lastUpdated = new Date(1);
+    this.lastUpdated = new Date();
   }
   public releaseIsNewer(release: GitHubRelease): boolean {
     return release.getTime() > this.lastUpdated;
