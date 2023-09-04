@@ -44,11 +44,23 @@ class GitHubRelease {
   }
 
   private getEmbedBody() {
-    return this.body.replace(
-      /#(?<number>\d+)/g,
-      (_, value) =>
-        `[#${value}](<https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}/pulls/${value}>)`,
-    );
+    return this.body
+      .replace(
+        /#(?<number>\d+)/g,
+        (_, value) =>
+          `[#${value}](<https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}/pulls/${value}>)`,
+      )
+      .replace(
+        /@(?<username>[a-zA-Z0-9-]+)/g,
+        (_, value) => `[@${value}](<https://github.com/${value}>)`,
+      )
+      .replace(
+        /[a-f0-9]{40}/g,
+        value =>
+          `[${value.substring(0, 7)}](<https://github.com/${env.REPO_NAME}/${
+            env.REPO_OWNER
+          }/commit/${value}>)`,
+      );
   }
 
   private getEmbedColour() {
