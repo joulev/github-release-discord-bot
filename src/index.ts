@@ -41,20 +41,24 @@ class GitHubRelease {
 
   private getEmbedBody() {
     const repoLink = `https://github.com/${env.REPO_OWNER}/${env.REPO_NAME}`;
-    return (
-      this.body
-        // PR number: #123
-        .replace(/#(\d+)/g, `[#$1](<${repoLink}/pulls/$1>)`)
-        // Username: @test
-        .replace(/@([a-zA-Z0-9-]+)/g, `[@$1](<https://github.com/$1>)`)
-        // Commit hash
-        .replace(
-          /[a-f0-9]{40}/g,
-          value => `[${value.substring(0, 7)}](<${repoLink}/commit/${value}>)`,
-        )
-        // Remove blank lines
-        .replace(/\n+/g, "\n")
-    );
+
+    const markdown = this.body
+      // PR number: #123
+      .replace(/#(\d+)/g, `[#$1](<${repoLink}/pulls/$1>)`)
+      // Username: @test
+      .replace(/@([a-zA-Z0-9-]+)/g, `[@$1](<https://github.com/$1>)`)
+      // Commit hash
+      .replace(
+        /[a-f0-9]{40}/g,
+        value => `[${value.substring(0, 7)}](<${repoLink}/commit/${value}>)`,
+      )
+      // Remove blank lines
+      .replace(/\n+/g, "\n");
+
+    const BODY_MAX_LENGTH = 4096;
+    return markdown.length > BODY_MAX_LENGTH
+      ? `${markdown.substring(0, BODY_MAX_LENGTH - 1)}…`
+      : markdown;
   }
 
   private getEmbedColour() {
