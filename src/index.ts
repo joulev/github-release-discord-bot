@@ -40,7 +40,7 @@ class GitHubRelease {
   }
 
   private getEmbedBody() {
-    const repoLink = `https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}`;
+    const repoLink = `https://github.com/${env.REPO_OWNER}/${env.REPO_NAME}`;
     return (
       this.body
         // PR number: #123
