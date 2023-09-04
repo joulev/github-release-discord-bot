@@ -11,8 +11,8 @@ class GitHubRelease {
   private readonly body: string;
   private readonly isPrerelease: boolean;
 
-  private static readonly STABLE_COLOUR = 0x0072F7;
-  private static readonly PRERELEASE_COLOUR = 0xFFB11A;
+  private static readonly STABLE_COLOUR = 0x0072f7;
+  private static readonly PRERELEASE_COLOUR = 0xffb11a;
 
   public constructor(
     release: RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"][number],
@@ -94,7 +94,7 @@ class LastUpdatedStore {
 }
 
 class ReleaseChecker {
-  private readonly octokit = new Octokit({ auth: env.GITHUB_TOKEN });
+  private readonly octokit = new Octokit({ auth: env.GITHUB_TOKEN, request: { fetch } });
   private readonly lastUpdatedStore = new LastUpdatedStore();
 
   options = {
