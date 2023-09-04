@@ -1,13 +1,54 @@
-import { Octokit } from "@octokit/rest";
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
+import { Client, Events, GatewayIntentBits, type MessageCreateOptions } from "discord.js";
 import { env } from "./env.js";
 
-interface GitHubRelease {
-  name: string | null;
-  time: Date;
-  url: string;
-  body: string | null | undefined;
-  isPrerelease: boolean;
+class GitHubRelease {
+  private readonly name: string;
+  private readonly time: Date;
+  private readonly url: string;
+  private readonly body: string;
+  private readonly isPrerelease: boolean;
+
+  private static readonly BLUE = 3447003;
+  private static readonly BLACK = 0;
+
+  public constructor(
+    release: RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"][number],
+  ) {
+    this.name = release.name ?? "Release name not provided";
+    this.time = release.published_at ? new Date(release.published_at) : new Date();
+    this.url = release.html_url;
+    this.body = release.body ?? "Release body not provided";
+    this.isPrerelease = release.prerelease;
+  }
+
+  private getFormattedBody(): string {
+    return this.body.replace(
+      /#(?<number>\d+)/g,
+      (_, value) =>
+        `[#${value}](<https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}/pulls/${value}>)`,
+    );
+  }
+
+  public getTime() {
+    return this.time;
+  }
+
+  public getMessage(): MessageCreateOptions {
+    return {
+      content: this.isPrerelease
+        ? `New Next.js canary release ${this.name}!`
+        : `New Next.js release ${this.name}!`,
+      embeds: [
+        {
+          title: this.name,
+          description: this.getFormattedBody(),
+          url: this.url,
+          color: this.isPrerelease ? GitHubRelease.BLACK : GitHubRelease.BLUE,
+        },
+      ],
+    };
+  }
 }
 
 class LastUpdatedStore {
@@ -16,7 +57,7 @@ class LastUpdatedStore {
     this.lastUpdated = new Date();
   }
   public releaseIsNewer(release: GitHubRelease): boolean {
-    return release.time > this.lastUpdated;
+    return release.getTime() > this.lastUpdated;
   }
   public update(): void {
     this.lastUpdated.setTime(Date.now());
@@ -37,20 +78,11 @@ class ReleaseChecker {
   }
 
   async getNewReleases(): Promise<GitHubRelease[]> {
-    const releases = await this.octokit.repos
-      .listReleases({ owner: env.REPO_OWNER, repo: env.REPO_NAME })
-      .then(res =>
-        res.data.map(release => ({
-          name: release.name,
-          time: release.published_at ? new Date(release.published_at) : null,
-          url: release.html_url,
-          body: release.body,
-          isPrerelease: release.prerelease,
-        })),
-      );
-    return releases
-      .filter((release): release is GitHubRelease => release.time !== null)
-      .filter(release => this.lastUpdatedStore.releaseIsNewer(release));
+    const res = await this.octokit.repos.listReleases({
+      owner: env.REPO_OWNER,
+      repo: env.REPO_NAME,
+    });
+    return res.data.map(release => new GitHubRelease(release));
   }
 
   async postNewRelease(release: GitHubRelease) {
@@ -59,16 +91,12 @@ class ReleaseChecker {
       console.error("Release channel is invalid");
       return;
     }
-    await releaseChannel.send(
-      `**${release.name}${release.isPrerelease ? " (prerelease)" : ""}**\n${release.url}\n${
-        release.body
-      }`,
-    );
+    await releaseChannel.send(release.getMessage());
   }
 
   async check() {
     const releases = await this.getNewReleases();
-    for (const release of releases.sort((a, b) => a.time.getTime() - b.time.getTime())) {
+    for (const release of releases.sort((a, b) => a.getTime().valueOf() - b.getTime().valueOf())) {
       // eslint-disable-next-line no-await-in-loop -- We want to ensure the order is correct
       await this.postNewRelease(release);
     }
