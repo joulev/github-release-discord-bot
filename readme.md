@@ -1,10 +1,10 @@
 # github-release-discord-bot
 
-A simple Discord bot to track releases in any GitHub repositories.
+A simple Discord webhook-based bot to track releases in any GitHub repositories.
 
 Intended to replace the existing bot in the Next.js Discord server which is not working well.
 
-<img width="604" alt="Screenshot" src="https://github.com/joulev/github-release-discord-bot/assets/44609036/6b5aa912-c663-4cfc-bfdc-2487da6721e7">
+<img width="594" alt="Screenshot" src="https://github.com/joulev/github-release-discord-bot/assets/44609036/4f286646-374b-4c18-a4d6-e0007b72f652">
 
 ## How it works
 
@@ -12,14 +12,16 @@ It doesn't require the repository owner to configure anything. Instead it just p
 
 ## Set up
 
-1. Register a Discord bot and add it to the server with the "Send Messages" permission.
+1. In your server, add a channel for the bot to send messages in.
 
-2. Add the necessary environment variables:
+2. Create a webhook in the channel
 
-   - `DISCORD_WEBHOOK`: The webhook url
+3. Add the necessary environment variables:
+
+   - `DISCORD_WEBHOOK`: The webhook URL above
    - `REPO_OWNER`: The owner of the GitHub repository (e.g. `vercel`)
    - `REPO_NAME`: The name of the GitHub repository (e.g. `next.js`)
    - `GITHUB_TOKEN` (optional): A GitHub personal access token (with the **repo** scope) to access the repository (only necessary if the repository is not public)
-   - `RELEASE_PING_ROLE_ID` and `PRERELEASE_PING_ROLE_ID`: The ping role IDs if you want the bot to ping. The channel also needs the "Mention Everyone" permission for everyone to work.
+   - `RELEASE_PING_ROLE_ID` and `PRERELEASE_PING_ROLE_ID`: The ping role IDs if you want the bot to ping. The channel also needs the "Mention Everyone" permission for the bot to work.
 
-3. The classic steps: `pnpm install`, `pnpm dev` for development, `pnpm build && pnpm start` for deployment.
+4. The classic steps: `pnpm install`, `pnpm dev` for development, `pnpm build && pnpm start` for deployment.
