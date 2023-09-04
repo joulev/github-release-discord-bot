@@ -20,6 +20,6 @@ It doesn't require the repository owner to configure anything. Instead it just p
    - `REPO_OWNER`: The owner of the GitHub repository (e.g. `vercel`)
    - `REPO_NAME`: The name of the GitHub repository (e.g. `next.js`)
    - `GITHUB_TOKEN` (optional): A GitHub personal access token (with the **repo** scope) to access the repository (only necessary if the repository is not public)
-   - `RELEASE_PING_ROLE_ID` and `PRERELEASE_PING_ROLE_ID`: The ping role IDs if you want the bot to ping. The bot also needs the "Mention Everyone" permission for the ping to work.
+   - `RELEASE_PING_ROLE_ID` and `PRERELEASE_PING_ROLE_ID`: The ping role IDs if you want the bot to ping. The channel also needs the "Mention Everyone" permission for everyone to work.
 
 3. The classic steps: `pnpm install`, `pnpm dev` for development, `pnpm build && pnpm start` for deployment.
