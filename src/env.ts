@@ -11,6 +11,8 @@ export const env = createEnv({
     GITHUB_TOKEN: z.string().min(1).optional(),
     REPO_OWNER: z.string().min(1),
     REPO_NAME: z.string().min(1),
+    RELEASE_PING_ROLE_ID: z.string().min(1).optional(),
+    PRERELEASE_PING_ROLE_ID: z.string().min(1).optional(),
   },
   runtimeEnv: process.env,
 });
