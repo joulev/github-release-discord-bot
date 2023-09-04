@@ -82,7 +82,9 @@ class ReleaseChecker {
       owner: env.REPO_OWNER,
       repo: env.REPO_NAME,
     });
-    return res.data.map(release => new GitHubRelease(release));
+    return res.data
+      .map(release => new GitHubRelease(release))
+      .filter(release => this.lastUpdatedStore.releaseIsNewer(release));
   }
 
   async postNewRelease(release: GitHubRelease) {
