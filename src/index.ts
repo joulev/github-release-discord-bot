@@ -1,5 +1,11 @@
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
-import { Client, Events, GatewayIntentBits, type MessageCreateOptions } from "discord.js";
+import {
+  Client,
+  EmbedBuilder,
+  Events,
+  GatewayIntentBits,
+  type MessageCreateOptions,
+} from "discord.js";
 import { env } from "./env.js";
 
 class GitHubRelease {
@@ -9,8 +15,8 @@ class GitHubRelease {
   private readonly body: string;
   private readonly isPrerelease: boolean;
 
-  private static readonly BLUE = 3447003;
-  private static readonly BLACK = 0;
+  private static readonly STABLE_COLOUR = "#0072F7";
+  private static readonly PRERELEASE_COLOUR = "#FFB11A";
 
   public constructor(
     release: RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"][number],
@@ -40,12 +46,13 @@ class GitHubRelease {
         ? `New Next.js canary release ${this.name}!`
         : `New Next.js release ${this.name}!`,
       embeds: [
-        {
-          title: this.name,
-          description: this.getFormattedBody(),
-          url: this.url,
-          color: this.isPrerelease ? GitHubRelease.BLACK : GitHubRelease.BLUE,
-        },
+        new EmbedBuilder()
+          .setTitle(this.name)
+          .setURL(this.url)
+          .setDescription(this.getFormattedBody())
+          .setColor(
+            this.isPrerelease ? GitHubRelease.PRERELEASE_COLOUR : GitHubRelease.STABLE_COLOUR,
+          ),
       ],
     };
   }
