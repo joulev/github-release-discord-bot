@@ -46,13 +46,12 @@ class GitHubRelease {
   private getEmbedBody() {
     return this.body
       .replace(
-        /#(?<number>\d+)/g,
-        (_, value) =>
-          `[#${value}](<https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}/pulls/${value}>)`,
+        /#(\d+)/g,
+        `[#$1](<https://github.com/${env.REPO_NAME}/${env.REPO_OWNER}/pulls/$1>)`
       )
       .replace(
-        /@(?<username>[a-zA-Z0-9-]+)/g,
-        (_, value) => `[@${value}](<https://github.com/${value}>)`,
+        /@([a-zA-Z0-9-]+)/g,
+        `[@$1](<https://github.com/$1>)`
       )
       .replace(
         /[a-f0-9]{40}/g,
