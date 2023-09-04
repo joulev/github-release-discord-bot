@@ -4,6 +4,8 @@ A simple Discord bot to track releases in any GitHub repositories.
 
 Intended to replace the existing bot in the Next.js Discord server which is not working well.
 
+<img width="604" alt="Screenshot" src="https://github.com/joulev/github-release-discord-bot/assets/44609036/6b5aa912-c663-4cfc-bfdc-2487da6721e7">
+
 ## How it works
 
 It doesn't require the repository owner to configure anything. Instead it just polls the GitHub API in a short interval and post any new releases it finds.
