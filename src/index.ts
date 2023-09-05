@@ -44,7 +44,7 @@ class GitHubRelease {
 
     const markdown = this.body
       // PR number: #123
-      .replace(/#(\d+)/g, `[#$1](<${repoLink}/pulls/$1>)`)
+      .replace(/#(\d+)/g, `[#$1](<${repoLink}/pull/$1>)`)
       // Username: @test
       .replace(/@([a-zA-Z0-9-]+)/g, `[@$1](<https://github.com/$1>)`)
       // Commit hash
