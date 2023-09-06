@@ -28,11 +28,11 @@ class GitHubRelease {
     if (this.isPrerelease) {
       return env.PRERELEASE_PING_ROLE_ID
         ? `<@&${env.PRERELEASE_PING_ROLE_ID}>: ${this.name}`
-        : `New prerelease: ${this.name}!`;
+        : `New prerelease: ${this.name}`;
     }
     return env.RELEASE_PING_ROLE_ID
       ? `<@&${env.RELEASE_PING_ROLE_ID}>: ${this.name}`
-      : `New release: ${this.name}!`;
+      : `New release: ${this.name}`;
   }
 
   private getEmbedTitle() {
