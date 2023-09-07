@@ -2,7 +2,7 @@
 
 A simple Discord webhook-based bot to track releases in any GitHub repositories.
 
-Intended to replace the existing bot in the Next.js Discord server which is not working well.
+This is the current bot running in #releases in the Next.js Discord server.
 
 <img width="594" alt="Screenshot" src="https://github.com/joulev/github-release-discord-bot/assets/44609036/4f286646-374b-4c18-a4d6-e0007b72f652">
 
