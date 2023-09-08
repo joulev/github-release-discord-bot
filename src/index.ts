@@ -1,8 +1,9 @@
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 import type { RESTPostAPIWebhookWithTokenJSONBody } from "discord-api-types/v10";
 import { EmbedBuilder } from "@discordjs/builders";
-import { fetch } from "undici";
-import { env } from "./env.js";
+import { env } from "./env";
+
+const log = env.DEBUG ? console.log : () => void 0;
 
 class GitHubRelease {
   private readonly name: string;
@@ -65,6 +66,10 @@ class GitHubRelease {
     return this.isPrerelease ? GitHubRelease.PRERELEASE_COLOUR : GitHubRelease.STABLE_COLOUR;
   }
 
+  public getTitle() {
+    return this.name;
+  }
+
   public getTime() {
     return this.time;
   }
@@ -98,7 +103,7 @@ class LastUpdatedStore {
 }
 
 class ReleaseChecker {
-  private readonly octokit = new Octokit({ auth: env.GITHUB_TOKEN, request: { fetch } });
+  private readonly octokit = new Octokit({ auth: env.GITHUB_TOKEN });
   private readonly lastUpdatedStore = new LastUpdatedStore();
 
   options = {
@@ -129,8 +134,10 @@ class ReleaseChecker {
   }
 
   async check() {
+    log("Checking for new releases at", new Date().toISOString());
     const releases = await this.getNewReleases();
     for (const release of releases) {
+      log("Posting release", release.getTitle());
       // eslint-disable-next-line no-await-in-loop -- We want to ensure the order is correct
       await this.postNewRelease(release);
     }

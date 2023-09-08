@@ -24,4 +24,4 @@ It doesn't require the repository owner to configure anything. Instead it just p
    - `GITHUB_TOKEN` (optional): A GitHub personal access token (with the **repo** scope) to access the repository (only necessary if the repository is not public)
    - `RELEASE_PING_ROLE_ID` and `PRERELEASE_PING_ROLE_ID`: The ping role IDs if you want the bot to ping. The channel also needs the "Mention Everyone" permission for the bot to work.
 
-4. The classic steps: `pnpm install`, `pnpm dev` for development, `pnpm build && pnpm start` for deployment.
+4. The classic steps: `bun install`, `bun dev` for development, `bun start` for deployment.
