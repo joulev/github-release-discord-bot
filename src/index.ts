@@ -56,10 +56,13 @@ class GitHubRelease {
       // Remove blank lines
       .replace(/\n+/g, "\n");
 
-    const BODY_MAX_LENGTH = 4096;
+    // Embed footer doesn't support links :sad_cri:
+    const footer = `\n[View the release note on GitHub](<${this.url}>)`;
+
+    const BODY_MAX_LENGTH = 4096 - footer.length;
     return markdown.length > BODY_MAX_LENGTH
-      ? `${markdown.substring(0, BODY_MAX_LENGTH - 1)}…`
-      : markdown;
+      ? `${markdown.substring(0, BODY_MAX_LENGTH - 1)}…${footer}`
+      : markdown + footer;
   }
 
   private getEmbedColour() {
