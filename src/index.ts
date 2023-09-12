@@ -52,7 +52,11 @@ class GitHubRelease {
       // PR number: #123
       .replace(/#(\d+)/g, `[#$1](<${repoLink}/pull/$1>)`)
       // Username: @test
-      .replace(/@([a-zA-Z0-9-]+)/g, `[@$1](<https://github.com/$1>)`)
+      .split("Credits")
+      .map((value, index) =>
+        index === 1 ? value.replace(/@([a-zA-Z0-9-]+)/g, `[@$1](<https://github.com/$1>)`) : value,
+      )
+      .join("Credits")
       // Commit hash
       .replace(
         /[a-f0-9]{40}/g,
