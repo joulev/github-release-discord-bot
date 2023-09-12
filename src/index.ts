@@ -50,23 +50,23 @@ class GitHubRelease {
 
     const markdown = this.body
       // PR number: #123
-      .replace(/#(\d+)/g, `[#$1](<${repoLink}/pull/$1>)`)
+      .replace(/#(\d+)/g, `[#$1](${repoLink}/pull/$1)`)
       // Username: @test
       .split("Credits")
       .map((value, index) =>
-        index === 1 ? value.replace(/@([a-zA-Z0-9-]+)/g, `[@$1](<https://github.com/$1>)`) : value,
+        index === 1 ? value.replace(/@([a-zA-Z0-9-]+)/g, `[@$1](https://github.com/$1)`) : value,
       )
       .join("Credits")
       // Commit hash
       .replace(
         /[a-f0-9]{40}/g,
-        value => `[${value.substring(0, 7)}](<${repoLink}/commit/${value}>)`,
+        value => `[${value.substring(0, 7)}](${repoLink}/commit/${value})`,
       )
       // Remove blank lines
       .replace(/\n+/g, "\n");
 
     // Embed footer doesn't support links :sad_cri:
-    const footer = `\n[View the release note on GitHub](<${this.url}>)`;
+    const footer = `\n**[View the release note on GitHub](${this.url})**`;
 
     const BODY_MAX_LENGTH = 4096 - footer.length;
     return markdown.length > BODY_MAX_LENGTH
@@ -95,6 +95,7 @@ class GitHubRelease {
           .setURL(this.url)
           .setDescription(this.getEmbedBody())
           .setFooter({ text: `Released by @${this.author.username}`, iconURL: this.author.photo })
+          .setTimestamp(this.time)
           .setColor(this.getEmbedColour())
           .toJSON(),
       ],
