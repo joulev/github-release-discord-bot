@@ -11,6 +11,7 @@ class GitHubRelease {
   private readonly url: string;
   private readonly body: string;
   private readonly isPrerelease: boolean;
+  private readonly author: { username: string; photo: string };
 
   private static readonly STABLE_COLOUR = 0x0072f7;
   private static readonly PRERELEASE_COLOUR = 0xffb11a;
@@ -23,6 +24,10 @@ class GitHubRelease {
     this.url = release.html_url;
     this.body = release.body ?? "Release body not provided";
     this.isPrerelease = release.prerelease;
+    this.author = {
+      username: release.author.login,
+      photo: release.author.avatar_url,
+    };
   }
 
   private getMessageContent() {
@@ -85,6 +90,7 @@ class GitHubRelease {
           .setTitle(this.getEmbedTitle())
           .setURL(this.url)
           .setDescription(this.getEmbedBody())
+          .setFooter({ text: `Released by @${this.author.username}`, iconURL: this.author.photo })
           .setColor(this.getEmbedColour())
           .toJSON(),
       ],
