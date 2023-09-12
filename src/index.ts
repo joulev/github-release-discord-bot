@@ -125,7 +125,11 @@ class ReleaseChecker {
       owner: env.REPO_OWNER,
       repo: env.REPO_NAME,
     });
-    // return [res.data.map(release => new GitHubRelease(release))[0]!];
+
+    if (process.env.NODE_ENV === "development")
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- choose a repo that already has releases
+      return [new GitHubRelease(res.data[0]!)];
+
     return res.data
       .map(release => new GitHubRelease(release))
       .filter(release => this.lastUpdatedStore.releaseIsNewer(release))

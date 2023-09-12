@@ -1,9 +1,9 @@
 {
   "type": "module",
   "scripts": {
-    "dev": "bun --watch run src/index.ts",
+    "dev": "NODE_ENV=development bun --watch run src/index.ts",
     "format": "prettier --write .",
-    "start": "bun run src/index.ts"
+    "start": "NODE_ENV=production bun run src/index.ts"
   },
   "dependencies": {
     "@discordjs/builders": "1.6.5",
