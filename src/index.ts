@@ -48,20 +48,19 @@ class GitHubRelease {
   private getEmbedBody() {
     const repoLink = `https://github.com/${env.REPO_OWNER}/${env.REPO_NAME}`;
 
+    const CREDIT_SECTION_MARKER = "\n\n### Credits \n\n";
+
     const markdown = this.body
       // PR number: #123
       .replace(/#(\d+)/g, `[#$1](${repoLink}/pull/$1)`)
       // Username: @test
-      .split("Credits")
+      .split(CREDIT_SECTION_MARKER)
       .map((value, index) =>
         index === 1 ? value.replace(/@([a-zA-Z0-9-]+)/g, `[@$1](https://github.com/$1)`) : value,
       )
-      .join("Credits")
+      .join(CREDIT_SECTION_MARKER)
       // Commit hash
-      .replace(
-        /[a-f0-9]{40}/g,
-        value => `[${value.substring(0, 7)}](${repoLink}/commit/${value})`,
-      )
+      .replace(/[a-f0-9]{40}/g, value => `[${value.substring(0, 7)}](${repoLink}/commit/${value})`)
       // Remove blank lines
       .replace(/\n+/g, "\n");
 
