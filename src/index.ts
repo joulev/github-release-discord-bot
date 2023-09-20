@@ -19,10 +19,10 @@ class GitHubRelease {
   public constructor(
     release: RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"][number],
   ) {
-    this.name = release.name ?? "Release name not provided";
+    this.name = release.tag_name;
     this.time = release.published_at ? new Date(release.published_at) : new Date();
     this.url = release.html_url;
-    this.body = release.body ?? "Release body not provided";
+    this.body = release.body || "Release body not provided";
     this.isPrerelease = release.prerelease;
     this.author = {
       username: release.author.login,
