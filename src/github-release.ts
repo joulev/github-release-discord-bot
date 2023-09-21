@@ -46,7 +46,7 @@ export class GitHubRelease {
   private getEmbedBody() {
     const repoLink = `https://github.com/${env.REPO_OWNER}/${env.REPO_NAME}`;
 
-    const CREDIT_SECTION_MARKER = "\n\n### Credits \n\n";
+    const CREDIT_SECTION_MARKER = "Huge thanks to";
 
     const markdown = this.body
       // PR number: #123
@@ -60,10 +60,12 @@ export class GitHubRelease {
       // Commit hash
       .replace(/[a-f0-9]{40}/g, value => `[${value.substring(0, 7)}](${repoLink}/commit/${value})`)
       // Remove blank lines
-      .replace(/\n+/g, "\n");
+      .replace(/(\r|\n|\r\n)+/g, "\n")
+      // Remove leading and trailing whitespaces
+      .trim();
 
     // Embed footer doesn't support links :sad_cri:
-    const footer = `\n**[View the release note on GitHub](${this.url})**`;
+    const footer = `\n\n**[View the release note on GitHub](${this.url})**`;
 
     const BODY_MAX_LENGTH = 4096 - footer.length;
     return markdown.length > BODY_MAX_LENGTH
