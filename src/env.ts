@@ -9,7 +9,6 @@ export const env = createEnv({
     REPO_NAME: z.string().min(1),
     RELEASE_PING_ROLE_ID: z.string().min(1).optional(),
     PRERELEASE_PING_ROLE_ID: z.string().min(1).optional(),
-    DEBUG: z.string().optional(),
   },
   runtimeEnv: process.env,
 });

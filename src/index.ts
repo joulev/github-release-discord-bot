@@ -2,7 +2,6 @@ import { Octokit } from "@octokit/rest";
 import { env } from "./env";
 import { GitHubRelease } from "./github-release";
 
-const log = env.DEBUG ? console.log : () => void 0;
 class LastUpdatedStore {
   private readonly lastUpdated: Date;
   public constructor() {
@@ -52,10 +51,10 @@ class ReleaseChecker {
   }
 
   async check() {
-    log("Checking for new releases at", new Date().toISOString());
+    console.log("Checking for new releases at", new Date().toISOString());
     const releases = await this.getNewReleases();
     for (const release of releases) {
-      log("Posting release", release.getTitle());
+      console.log(">>>>>>>>>>> Posting release", release.getTitle());
       // eslint-disable-next-line no-await-in-loop -- We want to ensure the order is correct
       await this.postNewRelease(release);
     }
