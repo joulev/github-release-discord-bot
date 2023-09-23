@@ -4,7 +4,7 @@
     "dev": "NODE_ENV=development bun --watch run src/index.ts",
     "dev:edit": "NODE_ENV=development bun --watch run src/edit-message.ts",
     "format": "prettier --write .",
-    "start": "NODE_ENV=production bun run src/index.ts",
+    "start": "NODE_ENV=production bun --smol run src/index.ts",
     "start:edit": "NODE_ENV=production bun run src/edit-message.ts"
   },
   "dependencies": {
