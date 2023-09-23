@@ -31,11 +31,11 @@ export class GitHubRelease {
   private getMessageContent() {
     if (this.isPrerelease) {
       return env.PRERELEASE_PING_ROLE_ID
-        ? `<@&${env.PRERELEASE_PING_ROLE_ID}>: ${this.name}`
+        ? `<@&${env.PRERELEASE_PING_ROLE_ID}> ${this.name}`
         : `New prerelease: ${this.name}`;
     }
     return env.RELEASE_PING_ROLE_ID
-      ? `<@&${env.RELEASE_PING_ROLE_ID}>: ${this.name}`
+      ? `<@&${env.RELEASE_PING_ROLE_ID}> ${this.name}`
       : `New release: ${this.name}`;
   }
 
