@@ -62,6 +62,7 @@ class ReleaseChecker {
   }
 
   public async run() {
+    console.log("Running on Bun", Bun.version);
     await this.check();
     setInterval(() => void this.check(), this.options.revalidate);
   }
