@@ -3,8 +3,8 @@ import { env } from "./env";
 import { GitHubRelease } from "./github-release";
 
 // Change the following two values
-const MESSAGE_ID = "1153745323332747384";
-const TAG_NAME = "v13.5.1";
+const MESSAGE_ID = "1219816027043659798";
+const TAG_NAME = "v14.1.4";
 
 async function main() {
   const octokit = new Octokit({ auth: env.GITHUB_TOKEN });

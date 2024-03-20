@@ -49,6 +49,11 @@ export class GitHubRelease {
     const CREDIT_SECTION_MARKER = "Huge thanks to";
 
     const markdown = this.body
+      // GFM callouts: [!NOTE] => **Note**, [!HELLO WORLD] => **Hello world**
+      .replace(
+        /\[!([A-Z]+)\]/,
+        (_, p1: string) => `**${p1.charAt(0) + p1.slice(1).toLowerCase()}**`,
+      )
       // PR number: #123
       .replace(/#(\d+)/g, `[#$1](${repoLink}/pull/$1)`)
       // Username: @test
