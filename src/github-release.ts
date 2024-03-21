@@ -50,10 +50,26 @@ export class GitHubRelease {
 
     const markdown = this.body
       // GFM callouts: [!NOTE] => **Note**, [!HELLO WORLD] => **Hello world**
-      .replace(
-        /\[!([A-Z]+)\]/,
-        (_, p1: string) => `**${p1.charAt(0) + p1.slice(1).toLowerCase()}**`,
-      )
+      // with emojis where applicable
+      .replace(/\[!([A-Z]+)\]/, (_, p1: string) => {
+        function getEmoji(type: string) {
+          switch (type) {
+            case "NOTE":
+              return "ℹ️ ";
+            case "TIP":
+              return "💡 ";
+            case "IMPORTANT":
+              return "❗️ ";
+            case "WARNING":
+              return "⚠️ ";
+            case "CAUTION":
+              return "🛑 ";
+            default:
+              return "";
+          }
+        }
+        return `${getEmoji(p1)}**${p1.charAt(0) + p1.slice(1).toLowerCase()}**\n> `;
+      })
       // PR number: #123
       .replace(/#(\d+)/g, `[#$1](${repoLink}/pull/$1)`)
       // Username: @test
