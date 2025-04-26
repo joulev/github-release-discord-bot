@@ -188,6 +188,8 @@ export class GitHubRelease {
     }
   };
 
+  public needsRefresh = false
+
   public async isNextjsBlog() {
     if (!this.url.startsWith("https://github.com/vercel/next.js/releases/tag/")) return null;
 
@@ -196,7 +198,10 @@ export class GitHubRelease {
       const blogName = minor === 0 ? `next-${major}` : `next-${major}-${minor}`;
 
       const res = await fetch(`https://nextjs.org/blog/${blogName}`)
-      if (!res.ok) return null;
+      if (!res.ok) {
+        this.needsRefresh = true;
+        return null;
+      };
 
       const html = await res.text();
       const og = html.match(/<meta property="og:image" content="([^"]+)"/)?.[1];

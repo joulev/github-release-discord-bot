@@ -1,17 +1,20 @@
 import { Octokit } from "@octokit/rest";
 import { env } from "./env";
 import { GitHubRelease } from "./github-release";
+import type { RESTGetAPIChannelMessageResult } from "discord-api-types/v10";
 
 class LastUpdatedStore {
   private readonly lastUpdated: Date;
+  private updateMessageIds: Record<string, string> = {};
   public constructor() {
     this.lastUpdated = new Date();
   }
   public releaseIsNewer(release: GitHubRelease): boolean {
-    return release.getTime() > this.lastUpdated;
+    return release.getTime() > this.lastUpdated || !!this.updateMessageIds[release.getTitle()];
   }
-  public update(): void {
-    this.lastUpdated.setTime(Date.now());
+  public update(date = new Date(), messageIds?: Record<string, string>): void {
+    this.lastUpdated.setTime(date.getTime());
+    this.updateMessageIds = messageIds ?? {};
   }
 }
 
@@ -42,26 +45,40 @@ class ReleaseChecker {
       .reverse(); // we need to post the oldest first
   }
 
-  async postNewRelease(release: GitHubRelease) {
-    const res = await fetch(env.DISCORD_WEBHOOK + "?with_components=true&wait=true", {
+  /** @returns The message id of the release if it needs to be refreshed, otherwise undefined */
+  async postNewRelease(release: GitHubRelease, messageId?: string) {
+    const url = messageId
+      ? `${env.DISCORD_WEBHOOK}/messages/${messageId}?with_components=true&wait=true`
+      : `${env.DISCORD_WEBHOOK}?with_components=true&wait=true`;
+
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(await release.getMessage()),
     });
+
     if (!res.ok) {
       console.error("Failed to post release", release.getTitle(), res.statusText, await res.text());
+    }
+
+    if (release.needsRefresh) {
+      const json = await res.json() as RESTGetAPIChannelMessageResult;
+      return json.id;
     }
   }
 
   async check() {
-    console.log("Checking for new releases at", new Date().toISOString());
+    const t = new Date();
+    console.log("Checking for new releases at", t.toISOString());
     const releases = await this.getNewReleases();
+    const refreshMsgs: Record<string, string> = {};
     for (const release of releases) {
       console.log(">>>>>>>>>>> Posting release", release.getTitle());
       // eslint-disable-next-line no-await-in-loop -- We want to ensure the order is correct
-      await this.postNewRelease(release);
+      const res = await this.postNewRelease(release);
+      if (res) refreshMsgs[release.getTitle()] = res;
     }
-    this.lastUpdatedStore.update();
+    this.lastUpdatedStore.update(t, refreshMsgs);
   }
 
   public async run() {
