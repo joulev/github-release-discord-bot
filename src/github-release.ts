@@ -1,6 +1,16 @@
 import type { RestEndpointMethodTypes } from "@octokit/rest";
-import type { RESTPostAPIWebhookWithTokenJSONBody } from "discord-api-types/v10";
-import { EmbedBuilder } from "@discordjs/builders";
+import {
+  MessageFlags,
+  ButtonStyle,
+  type RESTPostAPIWebhookWithTokenJSONBody,
+} from "discord-api-types/v10";
+import {
+  ContainerBuilder,
+  TextDisplayBuilder,
+  ButtonBuilder,
+  SectionBuilder,
+  SeparatorBuilder,
+} from "@discordjs/builders";
 import { env } from "./env";
 
 export class GitHubRelease {
@@ -9,7 +19,7 @@ export class GitHubRelease {
   private readonly url: string;
   private readonly body: string;
   private readonly isPrerelease: boolean;
-  private readonly author: { username: string; photo: string };
+  private readonly numberOfContributors: number;
 
   private static readonly STABLE_COLOUR = 0x0072f7;
   private static readonly PRERELEASE_COLOUR = 0xffb11a;
@@ -22,10 +32,7 @@ export class GitHubRelease {
     this.url = release.html_url;
     this.body = release.body || "Release body not provided";
     this.isPrerelease = release.prerelease;
-    this.author = {
-      username: release.author.login,
-      photo: release.author.avatar_url,
-    };
+    this.numberOfContributors = release.mentions_count ?? 0;
   }
 
   private getMessageContent() {
@@ -40,7 +47,19 @@ export class GitHubRelease {
   }
 
   private getEmbedTitle() {
-    return this.isPrerelease ? `🚧 ${this.name}` : `📦 ${this.name}`;
+    return this.isPrerelease
+      ? `## 🚧  [${this.name}](${this.url})`
+      : `## 📦  [${this.name}](${this.url})`;
+  }
+
+  private getMaxBodyLength() {
+    // the whole message content is measured, not just this field
+    return 4000 - this.getEmbedTitle().length - this.getMessageContent().length;
+  }
+
+  private getTruncatedEmbedBody(content: string) {
+    const maxLength = this.getMaxBodyLength();
+    return content.length > maxLength ? `${content.substring(0, maxLength - 1)}…` : content;
   }
 
   private getEmbedBody() {
@@ -85,13 +104,18 @@ export class GitHubRelease {
       // Remove leading and trailing whitespaces
       .trim();
 
-    // Embed footer doesn't support links :sad_cri:
-    const footer = `\n\n**[View the release note on GitHub](${this.url})**`;
+    const maxLength = this.getMaxBodyLength();
+    const tooLong = markdown.length > maxLength;
+    if (!tooLong) return this.getTruncatedEmbedBody(markdown);
 
-    const BODY_MAX_LENGTH = 4096 - footer.length;
-    return markdown.length > BODY_MAX_LENGTH
-      ? `${markdown.substring(0, BODY_MAX_LENGTH - 1)}…${footer}`
-      : markdown + footer;
+    const creditSectionOnly = markdown.split(CREDIT_SECTION_MARKER)[1];
+    if (!creditSectionOnly) return this.getTruncatedEmbedBody(markdown);
+
+    const creditOnlyContent = `Please refer to the full changelog on GitHub.\n### Credits\n${CREDIT_SECTION_MARKER}${creditSectionOnly}`;
+    if (creditOnlyContent.length > maxLength)
+      return `Please refer to the full changelog on GitHub.\nHuge thanks to ${this.numberOfContributors} contributors for helping!`;
+
+    return this.getTruncatedEmbedBody(creditOnlyContent);
   }
 
   private getEmbedColour() {
@@ -107,18 +131,27 @@ export class GitHubRelease {
   }
 
   public getMessage(): RESTPostAPIWebhookWithTokenJSONBody {
+    const container = new ContainerBuilder();
+    container.setAccentColor(this.getEmbedColour());
+    container.addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(this.getEmbedTitle()))
+        .setButtonAccessory(
+          new ButtonBuilder().setLabel("Changelog").setStyle(ButtonStyle.Link).setURL(this.url),
+        ),
+    );
+    container.addSeparatorComponents(new SeparatorBuilder());
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(this.getEmbedBody()));
+
     return {
-      content: this.getMessageContent(),
-      embeds: [
-        new EmbedBuilder()
-          .setTitle(this.getEmbedTitle())
-          .setURL(this.url)
-          .setDescription(this.getEmbedBody())
-          .setFooter({ text: `Released by @${this.author.username}`, iconURL: this.author.photo })
-          .setTimestamp(this.time)
-          .setColor(this.getEmbedColour())
-          .toJSON(),
+      components: [
+        new TextDisplayBuilder().setContent(this.getMessageContent()).toJSON(),
+        container.toJSON(),
       ],
+      flags: MessageFlags.IsComponentsV2,
+      allowed_mentions: {
+        roles: [env.PRERELEASE_PING_ROLE_ID, env.RELEASE_PING_ROLE_ID].filter(Boolean) as string[],
+      },
     };
   }
 }
