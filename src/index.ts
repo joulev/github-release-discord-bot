@@ -43,11 +43,14 @@ class ReleaseChecker {
   }
 
   async postNewRelease(release: GitHubRelease) {
-    await fetch(env.DISCORD_WEBHOOK, {
+    const res = await fetch(env.DISCORD_WEBHOOK + "?with_components=true&wait=true", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(release.getMessage()),
+      body: JSON.stringify(await release.getMessage()),
     });
+    if (!res.ok) {
+      console.error("Failed to post release", release.getTitle(), res.statusText, await res.text());
+    }
   }
 
   async check() {

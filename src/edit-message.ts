@@ -14,10 +14,10 @@ async function main() {
     tag: TAG_NAME,
   });
   const release = new GitHubRelease(data);
-  const res = await fetch(`${env.DISCORD_WEBHOOK}/messages/${MESSAGE_ID}`, {
+  const res = await fetch(`${env.DISCORD_WEBHOOK}/messages/${MESSAGE_ID}?with_components=true&wait=true`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(release.getMessage()),
+    body: JSON.stringify(await release.getMessage()),
   });
   console.log(res.ok ? "Successfully updated the message" : "Failed to update the message");
 }

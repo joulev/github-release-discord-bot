@@ -1,6 +1,7 @@
 import type { RestEndpointMethodTypes } from "@octokit/rest";
 import type { RESTPostAPIWebhookWithTokenJSONBody } from "discord-api-types/v10";
-import { EmbedBuilder } from "@discordjs/builders";
+import { MessageFlags, ButtonStyle } from "discord-api-types/v10";
+import { EmbedBuilder, ContainerBuilder, TextDisplayBuilder, ButtonBuilder, SectionBuilder, SeparatorBuilder, ActionRowBuilder, MediaGalleryItemBuilder, MediaGalleryBuilder } from "@discordjs/builders";
 import { env } from "./env";
 
 export class GitHubRelease {
@@ -40,7 +41,7 @@ export class GitHubRelease {
   }
 
   private getEmbedTitle() {
-    return this.isPrerelease ? `🚧 ${this.name}` : `📦 ${this.name}`;
+    return this.isPrerelease ? `\`🚧\`  [${this.name}](${this.url})` : `\`📦\`  [${this.name}](${this.url})`;
   }
 
   private getEmbedBody() {
@@ -85,13 +86,11 @@ export class GitHubRelease {
       // Remove leading and trailing whitespaces
       .trim();
 
-    // Embed footer doesn't support links :sad_cri:
-    const footer = `\n\n**[View the release note on GitHub](${this.url})**`;
-
-    const BODY_MAX_LENGTH = 4096 - footer.length;
+    // the whole message content is measured, not just this field
+    const BODY_MAX_LENGTH = 4000 - (`## ${this.getEmbedTitle()}`).length - this.getMessageContent().length;
     return markdown.length > BODY_MAX_LENGTH
-      ? `${markdown.substring(0, BODY_MAX_LENGTH - 1)}…${footer}`
-      : markdown + footer;
+      ? `${markdown.substring(0, BODY_MAX_LENGTH - 1)}…`
+      : `${markdown}`;
   }
 
   private getEmbedColour() {
@@ -106,19 +105,105 @@ export class GitHubRelease {
     return this.time;
   }
 
-  public getMessage(): RESTPostAPIWebhookWithTokenJSONBody {
+  public async getMessage(): Promise<RESTPostAPIWebhookWithTokenJSONBody> {
+    const nextjsBlog = await this.isNextjsBlog();
+
+    const container = new ContainerBuilder();
+    container.setAccentColor(this.getEmbedColour());
+
+    // the github changelog is going to be massive, so if they made a blog post just use its og image and description
+    if (nextjsBlog) {
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder()
+          .setContent(`## ${this.getEmbedTitle()}`),
+      );
+      if (nextjsBlog.og) container.addMediaGalleryComponents(
+        new MediaGalleryBuilder()
+          .addItems(new MediaGalleryItemBuilder().setURL(nextjsBlog.og))
+      );
+      if (nextjsBlog.description) container.addTextDisplayComponents(
+        new TextDisplayBuilder()
+          .setContent(nextjsBlog.description)
+      );
+      container.addActionRowComponents(
+        new ActionRowBuilder<ButtonBuilder>().addComponents([
+          new ButtonBuilder()
+            .setLabel("Full Changelog")
+            .setStyle(ButtonStyle.Link)
+            .setURL(this.url)
+            .setEmoji({ id: "1119818837542576208", name: "GitHub" }),
+          new ButtonBuilder()
+            .setLabel("Next.js Blog")
+            .setStyle(ButtonStyle.Link)
+            .setURL(nextjsBlog.url)
+            .setEmoji({ id: "753870953812983850", name: "next" }),
+        ])
+      );
+
+      // otherwise use the github changelog
+    } else {
+      container.addSectionComponents(
+        new SectionBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder()
+              .setContent(`## ${this.getEmbedTitle()}`),
+          )
+          .setButtonAccessory(
+            new ButtonBuilder()
+              .setLabel("Changelog")
+              .setStyle(ButtonStyle.Link)
+              .setURL(this.url)
+              .setEmoji({ id: "1119818837542576208", name: "GitHub" })
+          ),
+      );
+      container.addSeparatorComponents(new SeparatorBuilder());
+      const body = this.getEmbedBody();
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(body),
+      );
+
+      // if the content is really long, then add another button to view the full changelog
+      if (body.endsWith("…")) {
+        container.addActionRowComponents(
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setLabel("Full Changelog")
+              .setStyle(ButtonStyle.Link)
+              .setURL(this.url)
+              .setEmoji({ id: "1119818837542576208", name: "GitHub" }),
+          )
+        );
+      }
+    }
+
     return {
-      content: this.getMessageContent(),
-      embeds: [
-        new EmbedBuilder()
-          .setTitle(this.getEmbedTitle())
-          .setURL(this.url)
-          .setDescription(this.getEmbedBody())
-          .setFooter({ text: `Released by @${this.author.username}`, iconURL: this.author.photo })
-          .setTimestamp(this.time)
-          .setColor(this.getEmbedColour())
-          .toJSON(),
+      components: [
+        new TextDisplayBuilder().setContent(this.getMessageContent()).toJSON(),
+        container.toJSON()
       ],
-    };
+      flags: MessageFlags.IsComponentsV2,
+    }
+  };
+
+  public async isNextjsBlog() {
+    if (!this.url.startsWith("https://github.com/vercel/next.js/releases/tag/")) return null;
+
+    const [major, minor, patch] = this.name.replace("v", "").split(".").map(Number);
+    if (!this.isPrerelease && patch === 0) {
+      const blogName = minor === 0 ? `next-${major}` : `next-${major}-${minor}`;
+
+      const res = await fetch(`https://nextjs.org/blog/${blogName}`)
+      if (!res.ok) return null;
+
+      const html = await res.text();
+      const og = html.match(/<meta property="og:image" content="([^"]+)"/)?.[1];
+      const description = html.match(/<meta property="og:description" content="([^"]+)"/)?.[1];
+
+      return {
+        url: `https://nextjs.org/blog/${blogName}`,
+        og,
+        description,
+      };
+    }
   }
 }
