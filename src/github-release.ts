@@ -182,6 +182,9 @@ export class GitHubRelease {
         container.toJSON()
       ],
       flags: MessageFlags.IsComponentsV2,
+      allowed_mentions: {
+        roles: [env.PRERELEASE_PING_ROLE_ID, env.RELEASE_PING_ROLE_ID].filter(Boolean) as string[],
+      },
     }
   };
 
