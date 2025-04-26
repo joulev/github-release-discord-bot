@@ -150,7 +150,8 @@ export class GitHubRelease {
                 .setContent(`*waiting for nextjs blog post...*`),
             )
         ).addActionRowComponents(
-          new ActionRowBuilder<ButtonBuilder>().addComponents(fullChangelogButton)
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(fullChangelogButton)
         );
 
       }
@@ -180,7 +181,8 @@ export class GitHubRelease {
       // if the content is really long, then add another button to view the full changelog
       if (body.endsWith("…")) {
         container.addActionRowComponents(
-          new ActionRowBuilder<ButtonBuilder>().addComponents(fullChangelogButton)
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(fullChangelogButton)
         );
       }
     }
