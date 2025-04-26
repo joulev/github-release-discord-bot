@@ -106,7 +106,7 @@ export class GitHubRelease {
   }
 
   public async getMessage(): Promise<RESTPostAPIWebhookWithTokenJSONBody> {
-    const nextjsBlog = await this.isNextjsBlog();
+    const blog = await this.getBlogPost();
 
     const container = new ContainerBuilder();
     container.setAccentColor(this.getEmbedColour());
@@ -118,28 +118,28 @@ export class GitHubRelease {
       .setEmoji({ id: "1119818837542576208", name: "GitHub" })
 
     // the github changelog is going to be massive, so if they made a blog post just use its og image and description
-    if (nextjsBlog) {
+    if (blog) {
       container.addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(`## ${this.getEmbedTitle()}`),
       );
-      if (nextjsBlog.url) {
-        if (nextjsBlog.og) container.addMediaGalleryComponents(
+      if (blog.url) {
+        if (blog.og) container.addMediaGalleryComponents(
           new MediaGalleryBuilder()
-            .addItems(new MediaGalleryItemBuilder().setURL(nextjsBlog.og))
+            .addItems(new MediaGalleryItemBuilder().setURL(blog.og))
         );
-        if (nextjsBlog.description) container.addTextDisplayComponents(
+        if (blog.description) container.addTextDisplayComponents(
           new TextDisplayBuilder()
-            .setContent(nextjsBlog.description)
+            .setContent(blog.description)
         );
         container.addActionRowComponents(
           new ActionRowBuilder<ButtonBuilder>().addComponents([
             fullChangelogButton,
             new ButtonBuilder()
-              .setLabel("Next.js Blog")
+              .setLabel(blog.button.label)
               .setStyle(ButtonStyle.Link)
-              .setURL(nextjsBlog.url)
-              .setEmoji({ id: "753870953812983850", name: "next" }),
+              .setURL(blog.url)
+              .setEmoji(blog.button.emoji),
           ])
         );
       } else {
@@ -201,9 +201,12 @@ export class GitHubRelease {
 
   public needsRefresh = false
 
-  public async isNextjsBlog() {
+  public async getBlogPost() {
+    // edit this to whatever repo you want to check for a blog post
+    // most don't have one, so just return null by default
     if (!this.url.startsWith("https://github.com/vercel/next.js/releases/tag/")) return null;
 
+    // change this logic for how often you have a major release where the github changelog is not helpful
     const [major, minor, patch] = this.name.replace("v", "").split(".").map(Number);
     if (!this.isPrerelease && patch === 0) {
       const blogName = minor === 0 ? `next-${major}` : `next-${major}-${minor}`;
@@ -222,6 +225,11 @@ export class GitHubRelease {
         url: `https://nextjs.org/blog/${blogName}`,
         og,
         description,
+        // Customize the button to whatever you want too
+        button: {
+          label: "Next.js Blog",
+          emoji: { id: "753870953812983850", name: "next" }
+        }
       };
     }
   }
