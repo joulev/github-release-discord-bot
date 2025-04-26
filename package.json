@@ -8,17 +8,17 @@
     "start:edit": "NODE_ENV=production bun run src/edit-message.ts"
   },
   "dependencies": {
-    "@discordjs/builders": "1.6.5",
-    "@octokit/rest": "20.0.1",
-    "@t3-oss/env-core": "0.6.1",
-    "discord-api-types": "0.37.56",
-    "zod": "3.22.2"
+    "@discordjs/builders": "1.11.1",
+    "@octokit/rest": "21.1.1",
+    "@t3-oss/env-core": "0.13.0",
+    "discord-api-types": "0.38.1",
+    "zod": "3.24.3"
   },
   "devDependencies": {
     "@vercel/style-guide": "5.0.1",
-    "bun-types": "1.0.1",
+    "bun-types": "1.2.10",
     "eslint": "8.48.0",
-    "prettier": "3.0.3",
-    "typescript": "5.2.2"
+    "prettier": "3.5.3",
+    "typescript": "5.8.3"
   }
 }
