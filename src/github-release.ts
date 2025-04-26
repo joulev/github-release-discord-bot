@@ -111,34 +111,49 @@ export class GitHubRelease {
     const container = new ContainerBuilder();
     container.setAccentColor(this.getEmbedColour());
 
+    const fullChangelogButton = new ButtonBuilder()
+      .setLabel("Full Changelog")
+      .setStyle(ButtonStyle.Link)
+      .setURL(this.url)
+      .setEmoji({ id: "1119818837542576208", name: "GitHub" })
+
     // the github changelog is going to be massive, so if they made a blog post just use its og image and description
     if (nextjsBlog) {
       container.addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(`## ${this.getEmbedTitle()}`),
       );
-      if (nextjsBlog.og) container.addMediaGalleryComponents(
-        new MediaGalleryBuilder()
-          .addItems(new MediaGalleryItemBuilder().setURL(nextjsBlog.og))
-      );
-      if (nextjsBlog.description) container.addTextDisplayComponents(
-        new TextDisplayBuilder()
-          .setContent(nextjsBlog.description)
-      );
-      container.addActionRowComponents(
-        new ActionRowBuilder<ButtonBuilder>().addComponents([
-          new ButtonBuilder()
-            .setLabel("Full Changelog")
-            .setStyle(ButtonStyle.Link)
-            .setURL(this.url)
-            .setEmoji({ id: "1119818837542576208", name: "GitHub" }),
-          new ButtonBuilder()
-            .setLabel("Next.js Blog")
-            .setStyle(ButtonStyle.Link)
-            .setURL(nextjsBlog.url)
-            .setEmoji({ id: "753870953812983850", name: "next" }),
-        ])
-      );
+      if (nextjsBlog.url) {
+        if (nextjsBlog.og) container.addMediaGalleryComponents(
+          new MediaGalleryBuilder()
+            .addItems(new MediaGalleryItemBuilder().setURL(nextjsBlog.og))
+        );
+        if (nextjsBlog.description) container.addTextDisplayComponents(
+          new TextDisplayBuilder()
+            .setContent(nextjsBlog.description)
+        );
+        container.addActionRowComponents(
+          new ActionRowBuilder<ButtonBuilder>().addComponents([
+            fullChangelogButton,
+            new ButtonBuilder()
+              .setLabel("Next.js Blog")
+              .setStyle(ButtonStyle.Link)
+              .setURL(nextjsBlog.url)
+              .setEmoji({ id: "753870953812983850", name: "next" }),
+          ])
+        );
+      } else {
+        container.addSectionComponents(
+          new SectionBuilder()
+            .addTextDisplayComponents(
+              new TextDisplayBuilder()
+                .setContent(`*waiting for nextjs blog post...*`),
+            )
+        ).addActionRowComponents(
+          new ActionRowBuilder<ButtonBuilder>().addComponents(fullChangelogButton)
+        );
+
+      }
 
       // otherwise use the github changelog
     } else {
@@ -165,13 +180,7 @@ export class GitHubRelease {
       // if the content is really long, then add another button to view the full changelog
       if (body.endsWith("…")) {
         container.addActionRowComponents(
-          new ActionRowBuilder<ButtonBuilder>().addComponents(
-            new ButtonBuilder()
-              .setLabel("Full Changelog")
-              .setStyle(ButtonStyle.Link)
-              .setURL(this.url)
-              .setEmoji({ id: "1119818837542576208", name: "GitHub" }),
-          )
+          new ActionRowBuilder<ButtonBuilder>().addComponents(fullChangelogButton)
         );
       }
     }
@@ -200,7 +209,7 @@ export class GitHubRelease {
       const res = await fetch(`https://nextjs.org/blog/${blogName}`)
       if (!res.ok) {
         this.needsRefresh = true;
-        return null;
+        return {};
       };
 
       const html = await res.text();

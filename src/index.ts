@@ -16,6 +16,9 @@ class LastUpdatedStore {
     this.lastUpdated.setTime(date.getTime());
     this.updateMessageIds = messageIds ?? {};
   }
+  public getUpdateMessageId(release: GitHubRelease): string | undefined {
+    return this.updateMessageIds[release.getTitle()];
+  }
 }
 
 class ReleaseChecker {
@@ -52,7 +55,7 @@ class ReleaseChecker {
       : `${env.DISCORD_WEBHOOK}?with_components=true&wait=true`;
 
     const res = await fetch(url, {
-      method: "POST",
+      method: messageId ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(await release.getMessage()),
     });
@@ -61,10 +64,8 @@ class ReleaseChecker {
       console.error("Failed to post release", release.getTitle(), res.statusText, await res.text());
     }
 
-    if (release.needsRefresh) {
-      const json = await res.json() as RESTGetAPIChannelMessageResult;
-      return json.id;
-    }
+    const json = await res.json() as RESTGetAPIChannelMessageResult;
+    return json.id;
   }
 
   async check() {
@@ -74,9 +75,10 @@ class ReleaseChecker {
     const refreshMsgs: Record<string, string> = {};
     for (const release of releases) {
       console.log(">>>>>>>>>>> Posting release", release.getTitle());
+      const possibleMsgId = this.lastUpdatedStore.getUpdateMessageId(release);
       // eslint-disable-next-line no-await-in-loop -- We want to ensure the order is correct
-      const res = await this.postNewRelease(release);
-      if (res) refreshMsgs[release.getTitle()] = res;
+      const res = await this.postNewRelease(release, possibleMsgId);
+      if (res && release.needsRefresh) refreshMsgs[release.getTitle()] = res;
     }
     this.lastUpdatedStore.update(t, refreshMsgs);
   }
